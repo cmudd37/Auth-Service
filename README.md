@@ -1,157 +1,107 @@
 # Auth Service
 
-Standalone authentication and authorization microservice for registration, login, JWT access tokens, refresh token rotation, role-based access control, and OAuth2 social login with Google and GitHub.
+This is a learning project for building backend and cloud fundamentals through a standalone authentication service.
 
-## Initiative
+The goal is not to ship a finished auth platform quickly. The goal is to build each piece deliberately: understand the classes, write the code, break things, fix errors, and learn the backend patterns that make you internship-ready.
 
-This project declares a production-oriented Spring Boot auth service:
+## Current State
 
-- Spring Security protects API routes with stateless JWT access tokens.
-- OAuth2 authorization code flow is wired through Spring Security OAuth2 Client for Google and GitHub.
-- Refresh tokens are opaque, rotated on every use, revocable, hashed at rest, and stored in Redis.
-- Roles and permissions live in PostgreSQL and are enforced as Spring Security authorities.
-- Docker Compose runs the service with PostgreSQL and Redis.
+This repository is intentionally minimal.
 
-## Stack
+It contains:
 
-- Java 21
-- Spring Boot 3
-- Spring Security
-- Spring OAuth2 Client
-- Spring Data JPA
-- PostgreSQL
-- Redis
-- Flyway
-- Maven
-- Docker
+- A base Spring Boot application.
+- A Maven build file.
+- Empty package directories for the major backend layers.
+- A README to track the learning path.
 
-## Design Decisions
+It does not yet contain:
 
-JWTs are short-lived access tokens signed by the auth service. They are intentionally stateless so downstream services can validate identity and authorities without a database lookup on every request.
+- User entities.
+- Repositories.
+- DTOs.
+- Controllers.
+- Services.
+- Spring Security configuration.
+- JWT logic.
+- OAuth2 login.
+- PostgreSQL setup.
+- Redis refresh tokens.
+- Docker or cloud deployment.
 
-Refresh tokens are opaque rather than JWTs. The service stores only a SHA-256 hash of the refresh secret in Redis, rotates the token during refresh, and marks the old token revoked to limit replay risk.
+Those pieces will be added one at a time.
 
-PostgreSQL owns users, roles, permissions, and their relationships. Flyway seeds a default `USER` role, an `ADMIN` role, and baseline permissions so authorization data is versioned with the application.
+## Project Structure
 
-OAuth2 login uses Spring Security's authorization code flow endpoints. Successful Google or GitHub login upserts a local user, applies the default `USER` role, issues service-native tokens, and redirects to the configured frontend callback.
+```text
+src/main/java/com/example/authservice
+├── config
+├── controller
+├── dto
+├── entity
+├── exception
+├── repository
+├── security
+├── service
+└── AuthServiceApplication.java
 
-## API
-
-### Register
-
-```http
-POST /api/auth/register
-Content-Type: application/json
-
-{
-  "email": "dev@example.com",
-  "password": "change-me-123",
-  "displayName": "Dev User"
-}
+src/main/resources
+├── application.yml
+└── db/migration
 ```
 
-### Login
+## Package Purpose
 
-```http
-POST /api/auth/login
-Content-Type: application/json
+`entity`: Database-backed domain objects such as `User`, `Role`, and `Permission`.
 
-{
-  "email": "dev@example.com",
-  "password": "change-me-123"
-}
-```
+`repository`: Spring Data interfaces for reading and writing entities.
 
-### Refresh
+`dto`: Request and response objects that define API input/output.
 
-```http
-POST /api/auth/refresh
-Content-Type: application/json
+`controller`: REST endpoints such as registration, login, refresh, and account lookup.
 
-{
-  "refreshToken": "<refresh-token>"
-}
-```
+`service`: Business logic that coordinates repositories, validation, and token behavior.
 
-### Logout
+`security`: Spring Security, JWT filters, password handling, and OAuth2 integration.
 
-```http
-POST /api/auth/logout
-Authorization: Bearer <access-token>
-Content-Type: application/json
+`config`: Application configuration classes.
 
-{
-  "refreshToken": "<refresh-token>"
-}
-```
+`exception`: Custom exceptions and API error handling.
 
-### Current User
+`db/migration`: Future Flyway SQL migrations for PostgreSQL schema changes.
 
-```http
-GET /api/me
-Authorization: Bearer <access-token>
-```
+## Learning Roadmap
 
-### OAuth2 Login
-
-- Google: `GET /oauth2/authorization/google`
-- GitHub: `GET /oauth2/authorization/github`
+1. Run the base app.
+2. Create a simple health or hello endpoint.
+3. Add the first DTO and controller.
+4. Add a `User` entity.
+5. Add a `UserRepository`.
+6. Connect PostgreSQL locally.
+7. Build registration.
+8. Build login with password hashing.
+9. Add Spring Security basics.
+10. Add JWT access tokens.
+11. Add refresh tokens.
+12. Add roles and permissions.
+13. Add OAuth2 social login.
+14. Add Docker.
+15. Deploy to a cloud environment.
 
 ## Running Locally
 
-Copy the environment template and fill in provider credentials if you want social login:
+From the project root:
 
 ```bash
-cp .env.example .env
-```
-
-Start dependencies and the service:
-
-```bash
-docker compose up --build
-```
-
-Or run databases only, then start from IntelliJ or Maven:
-
-```bash
-docker compose up -d postgres redis
 mvn spring-boot:run
 ```
 
-Health check:
+Run tests:
 
 ```bash
-curl http://localhost:8080/actuator/health
+mvn test
 ```
 
-## Configuration
+## Working Agreement
 
-| Variable | Purpose | Default |
-| --- | --- | --- |
-| `DATABASE_URL` | JDBC URL for PostgreSQL | `jdbc:postgresql://localhost:5432/auth_service` |
-| `POSTGRES_USER` | Database username | `auth_user` |
-| `POSTGRES_PASSWORD` | Database password | `auth_password` |
-| `REDIS_HOST` | Redis host | `localhost` |
-| `REDIS_PORT` | Redis port | `6379` |
-| `JWT_SECRET` | HMAC signing secret | dev-only value |
-| `ACCESS_TOKEN_TTL` | JWT lifetime | `PT15M` |
-| `REFRESH_TOKEN_TTL` | Refresh token lifetime | `P30D` |
-| `GOOGLE_CLIENT_ID` | Google OAuth2 client id | blank |
-| `GOOGLE_CLIENT_SECRET` | Google OAuth2 client secret | blank |
-| `GITHUB_CLIENT_ID` | GitHub OAuth2 client id | blank |
-| `GITHUB_CLIENT_SECRET` | GitHub OAuth2 client secret | blank |
-| `OAUTH2_SUCCESS_REDIRECT_URI` | Frontend callback after social login | `http://localhost:3000/auth/callback` |
-
-## IntelliJ
-
-Open this folder in IntelliJ IDEA and import it as a Maven project. The `.run/Auth Service.run.xml` run configuration starts `com.example.authservice.AuthServiceApplication`; use `docker compose up -d postgres redis` first.
-
-## GitHub Repository
-
-Create the remote repository and push:
-
-```bash
-git remote add origin git@github.com:<your-org-or-user>/auth-service.git
-git branch -M main
-git push -u origin main
-```
+This project is for learning. Codex should help with syntax, structure, explanations, debugging, and repetitive tasks when asked. The developer should make the core implementation decisions and write the important code with guidance.
