@@ -1,0 +1,14 @@
+target/
+*.log
+*.class
+
+.idea/
+!.idea/runConfigurations/
+*.iml
+
+.env
+.env.*
+!.env.example
+
+.DS_Store
+Thumbs.db

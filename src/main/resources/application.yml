@@ -1,0 +1,58 @@
+spring:
+  application:
+    name: auth-service
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/auth_service}
+    username: ${POSTGRES_USER:auth_user}
+    password: ${POSTGRES_PASSWORD:auth_password}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+  flyway:
+    enabled: true
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      repositories:
+        enabled: false
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:local-google-client-id}
+            client-secret: ${GOOGLE_CLIENT_SECRET:local-google-client-secret}
+            scope:
+              - openid
+              - profile
+              - email
+          github:
+            client-id: ${GITHUB_CLIENT_ID:local-github-client-id}
+            client-secret: ${GITHUB_CLIENT_SECRET:local-github-client-secret}
+            scope:
+              - read:user
+              - user:email
+
+server:
+  port: ${SERVER_PORT:8080}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+app:
+  jwt:
+    issuer: ${JWT_ISSUER:auth-service}
+    secret: ${JWT_SECRET:dev-only-change-me-to-a-long-random-secret-please}
+    access-token-ttl: ${ACCESS_TOKEN_TTL:PT15M}
+  refresh-token:
+    ttl: ${REFRESH_TOKEN_TTL:P30D}
+  oauth2:
+    success-redirect-uri: ${OAUTH2_SUCCESS_REDIRECT_URI:http://localhost:3000/auth/callback}
